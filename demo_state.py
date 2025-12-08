@@ -12,6 +12,9 @@ class Smartphone:
         self.update_ui = callback
 
     def state_change(self, new_state):
+        if new_state == self.state:
+           return
+
         if (self.state == SmartphoneState.UP and new_state == SmartphoneState.LEFT) or \
            (self.state  == SmartphoneState.UP and new_state == SmartphoneState.RIGHT):
             self.state = new_state
