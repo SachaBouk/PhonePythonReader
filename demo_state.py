@@ -24,7 +24,7 @@ class Smartphone:
 
         if (self.state == SmartphoneState.RIGHT and new_state == SmartphoneState.UP) or \
            (self.state  == SmartphoneState.RIGHT and new_state == SmartphoneState.DOWN):
-            self.state = SmartphoneState.UP
+            self.state = new_state
             self.update_ui()
 
         if (self.state == SmartphoneState.DOWN and new_state == SmartphoneState.LEFT) or \
