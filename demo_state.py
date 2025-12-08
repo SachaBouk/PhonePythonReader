@@ -1,3 +1,7 @@
+from abc import ABC, abstractmethod
+
+
+
 class SmartphoneState:
 
     UP = 1
