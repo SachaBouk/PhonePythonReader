@@ -1,189 +1,217 @@
-<!DOCTYPE html>
 <html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pyodide Accéléromètre + Courbes (debug)</title>
+    <style>
+      body {
+        font-family: sans-serif;
+        padding: 20px;
+      }
+      #values {
+        font-size: 1.1em;
+        margin-top: 10px;
+      }
+      button {
+        padding: 10px 15px;
+        font-size: 1em;
+      }
+      #chart-container {
+        margin-top: 20px;
+        height: 300px;
+      }
+      #log {
+        margin-top: 20px;
+        padding: 10px;
+        border: 1px solid #ccc;
+        font-size: 0.8em;
+        max-height: 200px;
+        overflow: auto;
+        white-space: pre-wrap;
+      }
+    </style>
+  </head>
 
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Pyodide Accéléromètre + Courbes (debug)</title>
-  <style>
-    body {
-      font-family: sans-serif;
-      padding: 20px;
-    }
+  <body>
+    <h2>Pyodide + Accéléromètre (courbes)</h2>
 
-    #values {
-      font-size: 1.1em;
-      margin-top: 10px;
-    }
+    <p>
+      <!-- IMPORTANT: on appelle window.requestAccel -->
+      <button onclick="window.requestAccel()">Activer les capteurs</button>
+    </p>
 
-    button {
-      padding: 10px 15px;
-      font-size: 1em;
-    }
+    <div id="values">x=0.00, y=0.00, z=0.00, |a|=0.00, state=...</div>
 
-    #chart-container {
-      margin-top: 20px;
-      height: 300px;
-    }
+    <div id="chart-container">
+      <canvas
+        id="accelChart"
+        width="750"
+        height="375"
+        style="
+          display: block;
+          box-sizing: border-box;
+          height: 300px;
+          width: 600px;
+        "
+      ></canvas>
+    </div>
 
-    #log {
-      margin-top: 20px;
-      padding: 10px;
-      border: 1px solid #ccc;
-      font-size: 0.8em;
-      max-height: 200px;
-      overflow: auto;
-      white-space: pre-wrap;
-    }
-  </style>
-</head>
+    <pre id="log">
+Chargement de Pyodide...
+Pyodide chargé.
+Python prêt (boucle update installée).
+</pre
+    >
 
-<body>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-  <h2>Pyodide + Accéléromètre (courbes)</h2>
-
-  <p>
-    <!-- IMPORTANT: on appelle window.requestAccel -->
-    <button onclick="window.requestAccel()">Activer les capteurs</button>
-  </p>
-
-  <div id="values">En attente...</div>
-
-  <div id="chart-container">
-    <canvas id="accelChart"></canvas>
-  </div>
-
-  <pre id="log"></pre>
-
-  <!-- Chart.js -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-  <script type="module">
-    // ----------------- utils log -----------------
-    function log(msg) {
-      console.log(msg);
-      const logEl = document.getElementById("log");
-      logEl.textContent += msg + "\n";
-    }
-
-    // ----------------------------------------------------
-    //  Glue JS Accéléromètre
-    // ----------------------------------------------------
-
-    window.lastAccel = { x: 0, y: 0, z: 0 };
-
-    function handleMotion(event) {
-      const a = event.accelerationIncludingGravity || event.acceleration || {};
-      window.lastAccel = {
-        x: a.x || 0,
-        y: a.y || 0,
-        z: a.z || 0,
-      };
-    }
-
-    // IMPORTANT: on met la fonction sur window
-    window.requestAccel = async function () {
-      log("requestAccel() appelée");
-
-      if (!("DeviceMotionEvent" in window)) {
-        log("DeviceMotionEvent n'est pas disponible dans ce navigateur.");
-        alert("DeviceMotionEvent non supporté sur ce navigateur / appareil.");
-        return;
+    <script type="module">
+      // ----------------- utils log -----------------
+      function log(msg) {
+        console.log(msg);
+        const logEl = document.getElementById('log');
+        logEl.textContent += msg + '\n';
       }
 
-      log("DeviceMotionEvent est disponible.");
+      // ----------------------------------------------------
+      //  Glue JS Accéléromètre
+      // ----------------------------------------------------
 
-      try {
-        // Cas iOS: DeviceMotionEvent.requestPermission existe
-        if (typeof DeviceMotionEvent.requestPermission === "function") {
-          log("DeviceMotionEvent.requestPermission est disponible (iOS).");
-          const res = await DeviceMotionEvent.requestPermission();
-          log("Résultat requestPermission: " + res);
-          if (res === "granted") {
-            window.addEventListener("devicemotion", handleMotion);
-            log("Écouteur devicemotion ajouté (iOS).");
+      window.lastAccel = { x: 0, y: 0, z: 0 };
+
+      function handleMotion(event) {
+        const a =
+          event.accelerationIncludingGravity || event.acceleration || {};
+        window.lastAccel = {
+          x: a.x || 0,
+          y: a.y || 0,
+          z: a.z || 0,
+        };
+      }
+
+      // IMPORTANT: on met la fonction sur window
+      window.requestAccel = async function () {
+        log('requestAccel() appelée');
+
+        if (!('DeviceMotionEvent' in window)) {
+          log("DeviceMotionEvent n'est pas disponible dans ce navigateur.");
+          alert('DeviceMotionEvent non supporté sur ce navigateur / appareil.');
+          return;
+        }
+
+        log('DeviceMotionEvent est disponible.');
+
+        try {
+          // Cas iOS: DeviceMotionEvent.requestPermission existe
+          if (typeof DeviceMotionEvent.requestPermission === 'function') {
+            log('DeviceMotionEvent.requestPermission est disponible (iOS).');
+            const res = await DeviceMotionEvent.requestPermission();
+            log('Résultat requestPermission: ' + res);
+            if (res === 'granted') {
+              window.addEventListener('devicemotion', handleMotion);
+              log('Écouteur devicemotion ajouté (iOS).');
+            } else {
+              alert('Permission capteurs refusée : ' + res);
+            }
           } else {
-            alert("Permission capteurs refusée : " + res);
+            // Cas Android / autres
+            log(
+              "Pas de requestPermission, on ajoute directement l'écouteur devicemotion."
+            );
+            window.addEventListener('devicemotion', handleMotion);
+            log('Écouteur devicemotion ajouté (non-iOS).');
           }
-        } else {
-          // Cas Android / autres
-          log("Pas de requestPermission, on ajoute directement l'écouteur devicemotion.");
-          window.addEventListener("devicemotion", handleMotion);
-          log("Écouteur devicemotion ajouté (non-iOS).");
+        } catch (e) {
+          console.error(e);
+          log('Erreur dans requestAccel: ' + e);
+          alert("Erreur en demandant l'accès aux capteurs (voir console).");
         }
-      } catch (e) {
-        console.error(e);
-        log("Erreur dans requestAccel: " + e);
-        alert("Erreur en demandant l'accès aux capteurs (voir console).");
-      }
-    };
+      };
 
-    window.getAccelXYZ = function () {
-      const a = window.lastAccel || { x: 0, y: 0, z: 0 };
-      return [a.x, a.y, a.z];
-    };
+      window.getAccelXYZ = function () {
+        const a = window.lastAccel || { x: 0, y: 0, z: 0 };
+        return [a.x, a.y, a.z];
+      };
 
+      // ----------------------------------------------------
+      //  Chart.js : courbes X, Y, Z
+      // ----------------------------------------------------
 
-    // ----------------------------------------------------
-    //  Chart.js : courbes X, Y, Z
-    // ----------------------------------------------------
+      const ctx = document.getElementById('accelChart').getContext('2d');
+      const maxPoints = 200;
 
-    const ctx = document.getElementById("accelChart").getContext("2d");
-    const maxPoints = 200;
+      const accelChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: [],
+          datasets: [
+            {
+              label: 'X',
+              data: [],
+              borderWidth: 1,
+              tension: 0.2,
+              pointRadius: 0,
+            },
+            {
+              label: 'Y',
+              data: [],
+              borderWidth: 1,
+              tension: 0.2,
+              pointRadius: 0,
+            },
+            {
+              label: 'Z',
+              data: [],
+              borderWidth: 1,
+              tension: 0.2,
+              pointRadius: 0,
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          animation: false,
+          scales: {
+            x: { display: false },
+            y: { title: { display: true, text: 'Acceleration (m/s²)' } },
+          },
+        },
+      });
 
-    const accelChart = new Chart(ctx, {
-      type: "line",
-      data: {
-        labels: [],
-        datasets: [
-          { label: "X", data: [], borderWidth: 1, tension: 0.2, pointRadius: 0 },
-          { label: "Y", data: [], borderWidth: 1, tension: 0.2, pointRadius: 0 },
-          { label: "Z", data: [], borderWidth: 1, tension: 0.2, pointRadius: 0 },
-        ],
-      },
-      options: {
-        responsive: true,
-        animation: false,
-        scales: {
-          x: { display: false },
-          y: { title: { display: true, text: "Acceleration (m/s²)" } }
+      // appelée depuis Python
+      window.addAccelPoint = function (x, y, z) {
+        const labels = accelChart.data.labels;
+        const datasets = accelChart.data.datasets;
+
+        labels.push('');
+        datasets[0].data.push(x);
+        datasets[1].data.push(y);
+        datasets[2].data.push(z);
+
+        if (labels.length > maxPoints) {
+          labels.shift();
+          datasets.forEach((d) => d.data.shift());
         }
-      }
-    });
+        accelChart.update('none');
+      };
 
-    // appelée depuis Python
-    window.addAccelPoint = function (x, y, z) {
-      const labels = accelChart.data.labels;
-      const datasets = accelChart.data.datasets;
+      // ----------------------------------------------------
+      //  Pyodide
+      // ----------------------------------------------------
 
-      labels.push("");
-      datasets[0].data.push(x);
-      datasets[1].data.push(y);
-      datasets[2].data.push(z);
+      import { loadPyodide } from 'https://cdn.jsdelivr.net/pyodide/v0.24.1/full/pyodide.mjs';
 
-      if (labels.length > maxPoints) {
-        labels.shift();
-        datasets.forEach(d => d.data.shift());
-      }
-      accelChart.update("none");
-    };
+      log('Chargement de Pyodide...');
 
+      const pyodide = await loadPyodide();
+      log('Pyodide chargé.');
 
-    // ----------------------------------------------------
-    //  Pyodide
-    // ----------------------------------------------------
-
-    import { loadPyodide } from "https://cdn.jsdelivr.net/pyodide/v0.24.1/full/pyodide.mjs";
-
-    log("Chargement de Pyodide...");
-
-    const pyodide = await loadPyodide();
-    log("Pyodide chargé.");
-
-    await pyodide.runPythonAsync(`
+      await pyodide.runPythonAsync(`
 from js import window, document
 import math
 from pyodide.ffi import create_proxy
+
 from abc import ABC, abstractmethod
 
 class SmartphoneState(ABC):
@@ -324,7 +352,7 @@ class Smartphone:
         self.update_ui(self.state.name)
 
     # Récupération des données d'accélération
-
+    
 
     # API publique : on déclenche des événements, pas des états bruts
     def to_up(self):
@@ -339,7 +367,11 @@ class Smartphone:
     def to_right(self):
         self.state.to_right()
 
-class AccelSensor:
+class AccelSensor(Smartphone):
+    def __init__(self):
+        self.smartfone = Smartphone()
+        pass
+
     def get_xyz(self):
         xyz = window.getAccelXYZ()
         x = float(xyz[0] or 0.0)
@@ -351,37 +383,35 @@ class AccelSensor:
         x, y, z = self.get_xyz()
         return math.sqrt(x*x + y*y + z*z)
     
-    def get_SmartphoneState(self):
-      x, y, z = self.get_xyz()
-      if abs(x) > abs(y):
-          if x > 0:
-              return "RIGHT"
-          else:
-              return "LEFT"
-      else:
-          if y >= 0:
-              return "DOWN"
-          else:
-              return "UP"
+    def get_state(self, x, y, z):
+        if y>7:
+            self.smartfone.to_up()
+            return self.smartfone.state.name
+        if y<-7:
+           self.smartfone.to_down()
+           return self.smartfone.state.name
+        if x>7:
+           self.smartfone.to_left()
+           return self.smartfone.state.name
+        if x<-7:
+            self.smartfone.to_right()
+            return self.smartfone.state.name
+        return "center"
 
 accel = AccelSensor()
-phone = Smartphone()
-
 def update(*args, **kwargs):
     x, y, z = accel.get_xyz()
+    result = accel.get_state(x=x,y=y,z=z)
     m = accel.get_magnitude()
     document.getElementById("values").innerText = (
-        f"x={x:.2f}, y={y:.2f}, z={z:.2f}, |a|={m:.2f}, SmartphoneState={accel.get_SmartphoneState()}"
+        f"x={x:.2f}, y={y:.2f}, z={z:.2f}, |a|={m:.2f}, state={result}"
     )
     window.addAccelPoint(x, y, z)
 
 update_proxy = create_proxy(update)
 window.setInterval(update_proxy, 200)
 `);
-    log("Python prêt (boucle update installée).");
-
-  </script>
-
-</body>
-
+      log('Python prêt (boucle update installée).');
+    </script>
+  </body>
 </html>
